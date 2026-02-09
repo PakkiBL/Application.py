@@ -102,9 +102,6 @@ if st.button("Compare Prices"):
             "price_comparison.csv",
             "text/csv"
         )
-'''
-
-'''
 import streamlit as st
 import requests
 import pandas as pd
@@ -236,9 +233,6 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-# -------------------------------
-# Page Configuration
-# -------------------------------
 st.set_page_config(
     page_title="QuickCart AI",
     page_icon="🛍",
@@ -250,18 +244,12 @@ API_KEY = st.secrets["SERPAPI_KEY"]
 st.title("🛍 QuickCart AI – Smart Grocery Deal Finder")
 st.markdown("Real-time price comparison with smart buying insights.")
 
-# -------------------------------
-# Sidebar Filters
-# -------------------------------
 st.sidebar.header("⚙ Filters")
 num_results = st.sidebar.slider("Number of Stores", 3, 10, 5)
 min_rating = st.sidebar.slider("Minimum Rating", 0.0, 5.0, 0.0)
 
 product_name = st.text_input("🔎 Enter Product Name")
 
-# -------------------------------
-# Main Logic
-# -------------------------------
 if st.button("Analyze Market"):
 
     if not product_name:
@@ -292,18 +280,18 @@ if st.button("Analyze Market"):
 
         for item in results[:num_results]:
             try:
-                # Clean price
+               
                 price_text = item.get("price", "0")
                 price_clean = price_text.replace("₹", "").replace(",", "").strip()
                 price_value = float(price_clean)
 
-                # Clean rating
+                
                 rating = item.get("rating", 0)
                 rating = float(rating) if rating else 0
 
                 if rating >= min_rating:
 
-                    # Get real product page link
+                   
                     product_link = item.get("product_link") or item.get("link") or ""
 
                     products.append({
@@ -325,23 +313,14 @@ if st.button("Analyze Market"):
 
         # Remove duplicate stores
         df = df.drop_duplicates(subset=["Store"])
-
-        # Sort by price
         df = df.sort_values(by="Price (₹)").reset_index(drop=True)
 
-        # Add Ranking Column
         df.insert(0, "Rank", df.index + 1)
 
-        # -------------------------------
-        # Product Preview
-        # -------------------------------
         st.subheader("🖼 Product Preview")
         if df.iloc[0]["Image"]:
             st.image(df.iloc[0]["Image"], width=250)
 
-        # -------------------------------
-        # Market Price Table
-        # -------------------------------
         st.subheader("📊 Market Price Table")
 
         display_df = df.drop(columns=["Image"])
@@ -357,9 +336,6 @@ if st.button("Analyze Market"):
             }
         )
 
-        # -------------------------------
-        # Metrics Section
-        # -------------------------------
         lowest_price = df["Price (₹)"].min()
         highest_price = df["Price (₹)"].max()
         avg_price = df["Price (₹)"].mean()
@@ -369,15 +345,9 @@ if st.button("Analyze Market"):
         col2.metric("Average Market Price", f"₹{round(avg_price, 2)}")
         col3.metric("Highest Price", f"₹{highest_price}")
 
-        # -------------------------------
-        # Price Distribution Chart
-        # -------------------------------
         st.subheader("📈 Price Distribution")
         st.bar_chart(df.set_index("Store")["Price (₹)"])
 
-        # -------------------------------
-        # Recommendation Logic
-        # -------------------------------
         best_store = df.iloc[0]["Store"]
         percent_saving = ((avg_price - lowest_price) / avg_price) * 100
 
@@ -393,9 +363,6 @@ if st.button("Analyze Market"):
         else:
             st.warning("⏳ WAIT. Prices are close to market average.")
 
-        # -------------------------------
-        # Business Insight
-        # -------------------------------
         st.subheader("📌 Business Insight")
         st.write("""
         - Price variance indicates market competition level.
@@ -407,9 +374,6 @@ if st.button("Analyze Market"):
             f"Last Updated: {datetime.now().strftime('%d %B %Y, %I:%M %p')}"
         )
 
-        # -------------------------------
-        # Download CSV
-        # -------------------------------
         csv = df.to_csv(index=False).encode("utf-8")
 
         st.download_button(
