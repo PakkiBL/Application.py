@@ -103,7 +103,9 @@ if st.button("Compare Prices"):
             "text/csv"
         )
 '''
-'''import streamlit as st
+
+'''
+import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime
@@ -226,7 +228,6 @@ if st.button("Analyze Market"):
 
         csv = df.to_csv(index=False).encode("utf-8")
         st.download_button("⬇ Download Market Data", csv, "market_analysis.csv", "text/csv")
-
 
 '''
 
