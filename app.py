@@ -112,7 +112,7 @@ st.set_page_config(page_title="Price Intelligence System", page_icon="🛍", lay
 
 API_KEY = st.secrets["SERPAPI_KEY"]
 
-st.title("🛍 AI-Powered Price Intelligence System")
+st.title("🛍 QuickCart AI – Smart Grocery Deal Finder")
 st.markdown("Real-time price comparison with smart buying insights.")
 
 # Sidebar
