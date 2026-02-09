@@ -103,7 +103,7 @@ if st.button("Compare Prices"):
             "text/csv"
         )
 '''
-import streamlit as st
+'''import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime
@@ -226,4 +226,160 @@ if st.button("Analyze Market"):
 
         csv = df.to_csv(index=False).encode("utf-8")
         st.download_button("⬇ Download Market Data", csv, "market_analysis.csv", "text/csv")
+
+
+'''
+
+import streamlit as st
+import requests
+import pandas as pd
+from datetime import datetime
+
+# Page Config
+st.set_page_config(page_title="QuickCart AI", page_icon="🛍", layout="wide")
+
+API_KEY = st.secrets["SERPAPI_KEY"]
+
+st.title("🛍 QuickCart AI – Smart Grocery Deal Finder")
+st.markdown("Real-time price comparison with smart buying insights.")
+
+# Sidebar Filters
+st.sidebar.header("⚙ Filters")
+num_results = st.sidebar.slider("Number of Stores", 3, 10, 5)
+min_rating = st.sidebar.slider("Minimum Rating", 0.0, 5.0, 0.0)
+
+product_name = st.text_input("🔎 Enter Product Name")
+
+if st.button("Analyze Market"):
+
+    if not product_name:
+        st.warning("Please enter a product name.")
+        st.stop()
+
+    with st.spinner("Analyzing real-time market data..."):
+
+        url = "https://serpapi.com/search.json"
+
+        params = {
+            "engine": "google_shopping",
+            "q": product_name,
+            "api_key": API_KEY,
+            "gl": "in",
+            "hl": "en"
+        }
+
+        response = requests.get(url, params=params)
+        data = response.json()
+        results = data.get("shopping_results", [])
+
+        if not results:
+            st.error("No results found.")
+            st.stop()
+
+        products = []
+
+        for item in results[:num_results]:
+            try:
+                # Clean price
+                price_text = item.get("price", "0")
+                price_clean = (
+                    price_text.replace("₹", "")
+                    .replace(",", "")
+                    .strip()
+                )
+                price_value = float(price_clean)
+
+                # Clean rating
+                rating = item.get("rating", 0)
+                rating = float(rating) if rating else 0
+
+                if rating >= min_rating:
+
+                    # Get REAL product page link
+                    product_link = item.get("product_link") or item.get("link") or ""
+
+                    products.append({
+                        "Store": item.get("source", "Unknown"),
+                        "Price (₹)": price_value,
+                        "Rating": rating,
+                        "Product Link": product_link,
+                        "Image": item.get("thumbnail", "")
+                    })
+
+            except:
+                continue
+
+        df = pd.DataFrame(products)
+
+        if df.empty:
+            st.error("No products match your filter criteria.")
+            st.stop()
+
+        # Remove duplicates
+        df = df.drop_duplicates(subset=["Store"])
+
+        # Sort by lowest price
+        df = df.sort_values(by="Price (₹)")
+
+        # Show Product Preview
+        st.subheader("🖼 Product Preview")
+        if df.iloc[0]["Image"]:
+            st.image(df.iloc[0]["Image"], width=250)
+
+        # Convert links into clickable format
+        df["Product Link"] = df["Product Link"].apply(
+            lambda x: f"[Open Product]({x})" if x else "N/A"
+        )
+
+        st.subheader("📊 Market Price Table")
+        st.markdown(df.drop(columns=["Image"]).to_markdown(index=False), unsafe_allow_html=True)
+
+        # Metrics
+        lowest_price = df["Price (₹)"].min()
+        highest_price = df["Price (₹)"].max()
+        avg_price = df["Price (₹)"].mean()
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Lowest Price", f"₹{lowest_price}")
+        col2.metric("Average Market Price", f"₹{round(avg_price,2)}")
+        col3.metric("Highest Price", f"₹{highest_price}")
+
+        # Chart
+        st.subheader("📈 Price Distribution")
+        st.bar_chart(df.set_index("Store")["Price (₹)"])
+
+        # Recommendation Logic
+        best_store = df.iloc[0]["Store"]
+        percent_saving = ((avg_price - lowest_price) / avg_price) * 100
+
+        st.subheader("🤖 AI Buying Recommendation")
+
+        if percent_saving > 15:
+            st.success(
+                f"🔥 STRONG BUY at {best_store}! "
+                f"You save {round(percent_saving,2)}% compared to market average."
+            )
+        elif 8 < percent_saving <= 15:
+            st.info("👍 Good Deal. Buying now is reasonable.")
+        else:
+            st.warning("⏳ WAIT. Prices are close to market average.")
+
+        # Business Insight
+        st.subheader("📌 Business Insight")
+        st.write("""
+        - Price variance indicates market competition level.
+        - Higher variance = opportunity for smart purchasing.
+        - Low variance = stable pricing market.
+        """)
+
+        st.caption(f"Last Updated: {datetime.now().strftime('%d %B %Y, %I:%M %p')}")
+
+        # Download CSV
+        csv = df.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            "⬇ Download Market Data",
+            csv,
+            "market_analysis.csv",
+            "text/csv"
+        )
 
