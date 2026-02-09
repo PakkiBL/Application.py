@@ -226,3 +226,39 @@ if st.button("Analyze Market"):
 
         csv = df.to_csv(index=False).encode("utf-8")
         st.download_button("⬇ Download Market Data", csv, "market_analysis.csv", "text/csv")
+
+# Initialize cart
+if "cart" not in st.session_state:
+    st.session_state.cart = []
+
+st.subheader("🛍 Available Stores")
+
+for index, row in df.iterrows():
+    col1, col2, col3 = st.columns([2, 2, 1])
+
+    col1.write(f"**{row['Store']}**")
+    col2.write(f"₹ {row['Price']}")
+    
+    if col3.button("Add to Cart", key=index):
+        st.session_state.cart.append(row)
+        st.success("Added to cart!")
+
+# ---------------- CART SECTION ----------------
+
+st.markdown("---")
+st.subheader("🛒 Your Cart")
+
+if len(st.session_state.cart) == 0:
+    st.write("Cart is empty.")
+else:
+    cart_df = pd.DataFrame(st.session_state.cart)
+    st.dataframe(cart_df[["Store", "Price"]])
+
+    total = cart_df["Price"].sum()
+    st.markdown(f"### 💰 Total: ₹ {total}")
+
+    if st.button("Place Order"):
+        delivery_time = random.randint(10, 30)
+        st.success(f"🎉 Order Placed Successfully!")
+        st.info(f"🚚 Estimated Delivery: {delivery_time} minutes")
+        st.session_state.cart = []
