@@ -239,7 +239,12 @@ st.set_page_config(
     layout="wide"
 )
 
-API_KEY = st.secrets["SERPAPI_KEY"]
+API_KEY = st.secrets.get("SERPAPI_KEY")
+
+if not API_KEY:
+    st.error("SERPAPI_KEY not found. Please add it in Streamlit Cloud → Manage App → Secrets.")
+    st.stop()
+
 
 st.title("🛍 QuickCart AI – Smart Grocery Deal Finder")
 st.markdown("Real-time price comparison with smart buying insights.")
